@@ -1,0 +1,61 @@
+; configuration for php Xcache module
+
+;; -- the following section would not apply to others, only to my setup
+;;[xcache-common]
+;; install as zend extension (recommended), normally "$extension_dir/xcache.so"
+;;zend_extension = /usr/lib/php5/20090626/xcache.so
+;; -- ^ use your own configuration for this ^
+
+[xcache.admin]
+xcache.admin.auth = On
+xcache.admin.user = "appadmin"
+xcache.admin.pass = "MD5 Hash - get from someone who knows"
+
+[xcache]
+; ini only settings, all the values here is default unless explained
+
+; select low level shm/allocator scheme implemenation
+xcache.shm_scheme =        "mmap"
+xcache.size  =              128M
+; set to cpu count (cat /proc/cpuinfo |grep -c processor)
+xcache.count =                 4
+xcache.slots =                8K
+xcache.ttl   =              3600
+xcache.gc_interval =        3600
+xcache.var_size =	         64M
+xcache.var_count =             2
+xcache.var_slots =            8K
+xcache.var_ttl   =          3600
+;xcache.var_maxttl   =     360000
+;xcache.var_gc_interval =    1800
+
+; for *nix, xcache.mmap_path is a file path, not directory.
+; Use something like "/tmp/xcache" if you want to turn on ReadonlyProtection
+; 2 group of php won't share the same /tmp/xcache
+; for win32, xcache.mmap_path=anonymous map name, not file path
+xcache.mmap_path =    "/tmp/xcache"
+
+
+; leave it blank(disabled) or "/tmp/phpcore/"
+; make sure it's writable by php (without checking open_basedir)
+;xcache.coredump_directory =   ""
+
+; per request settings
+xcache.cacher =               On
+xcache.stat   =               On
+xcache.optimizer =            On
+
+xcache.test =                Off
+; N/A for /dev/zero
+xcache.readonly_protection = Off
+
+
+[xcache.coverager]
+; per request settings
+; enable coverage data collecting for xcache.coveragedump_directory and xcache_coverager_start/stop/get/clean() functions (will hurt executing performance)
+xcache.coverager =          Off
+
+; ini only settings
+; make sure it's readable (care open_basedir) by coverage viewer script
+; requires xcache.coverager=On
+xcache.coveragedump_directory = ""
