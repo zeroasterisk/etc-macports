@@ -1,0 +1,72 @@
+#
+# These are standard location configs which should be setup in all CakePHP apps
+#   basic php functionality
+#   basic document resolution configuration
+#   basic security
+#   basic optimization
+#
+  location ~ (.*)\.php\.html$ {
+    try_files $uri $uri/ /index.php?url=$request_uri;
+  }
+
+  #PHP Magic
+  location ~ (.*)\.php(.*)$ {
+	fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+	fastcgi_split_path_info ^(.+\.php)(.*)$;
+	#NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+	include fastcgi.conf;
+	#fastcgi_intercept_errors on;
+	fastcgi_pass php;
+	#fastcgi_pass unix:/var/run/php5-fpm.socket;
+    fastcgi_index index.php;
+    fastcgi_intercept_errors off; #turned off on dev/qa due to issues when CakePHP sends a 404 back app_error.php on AO # to support 404s for PHP files no$
+    error_page 404 = /index.php?url=$1;
+  }
+  location ~ \..*/.*\.php(.*)$ {
+    return 403;
+  }
+
+  #Site Locations
+  location / {
+    # $appname must be set in the server before this file is loaded
+    # set $appname "site-env"
+    #fastcgi_param PHP_VALUE "newrelic.appname=cakephp-$appname";
+    fastcgi_param PHP_VALUE newrelic.appname=alantestapp0a;
+    rewrite ^/$ /index.php?url=/ last;
+    if (-f $request_filename) {
+      break;
+    }
+    try_files $uri $uri/ /index.php?url=$request_uri;
+    if (!-f $request_filename) {
+        rewrite ^/(.*)$ /index.php?url=$1 last;
+    }
+  }
+  location  ~* \.(jpg|jpeg|gif|css|png|js|ico|html|swf|flv|mp3|m4v)$ {
+    access_log off;
+    expires    30d;
+    try_files $uri $uri/ /index.php?url=$request_uri;
+
+    if ($args ~ "^download") {
+      add_header Content-Disposition "attachment; filename=$filename";
+    }
+  }
+  location ~ /\.ht {
+    deny  all;
+  }
+  location = /favicon.ico {
+    log_not_found off;
+    access_log off;
+  }
+  location = /robots.txt {
+    allow all;
+    log_not_found off;
+    access_log off;
+    try_files $uri /index.php;
+  }
+
+  # if directive below is in global context - see redmine 2077 for more info (11/23/2011)
+  # https://redmine.manage-website.com/issues/2079
+  # We don't want to send $request_filename since it will reveal our directory layout..
+  if ($request_filename ~* ^.*?/([^/]*?)$) {
+    set $filename $1;
+  }
